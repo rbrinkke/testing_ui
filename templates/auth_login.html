@@ -13,6 +13,7 @@
             align-items: center;
             justify-content: center;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding-top: 56px; /* Space for fixed menu */
         }
         .tab-button {
             transition: all 0.3s ease;
@@ -62,6 +63,27 @@
     </style>
 </head>
 <body>
+    <!-- Global Navigation Menu -->
+    <nav class="fixed top-0 left-0 right-0 bg-gray-900 text-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold">🧪 Testing UI</span>
+                </div>
+                <div class="flex gap-2">
+                    <a href="/test/login" class="px-3 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 transition flex items-center gap-1">
+                        <span>🔐</span>
+                        <span class="hidden sm:inline">Login</span>
+                    </a>
+                    <a href="/test/auth" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition flex items-center gap-1">
+                        <span>🧪</span>
+                        <span class="hidden sm:inline">API Tests</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="w-full max-w-md px-4">
         <!-- Auth Box -->
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
