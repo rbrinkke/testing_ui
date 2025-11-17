@@ -42,3 +42,22 @@ async def auth_testing_page(request: Request):
             "title": "Auth API Testing Interface",
         }
     )
+
+
+@router.get("/login", response_class=HTMLResponse, summary="Authentication Login Page")
+async def auth_login_page(request: Request):
+    """
+    Serves the authentication login/register page.
+
+    This page provides a clean, single-box interface for:
+    - Login with code verification
+    - Registration with email verification
+    - Password reset with code
+    """
+    return templates.TemplateResponse(
+        "auth_login.html",
+        {
+            "request": request,
+            "title": "Login - Authentication",
+        }
+    )
