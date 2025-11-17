@@ -86,10 +86,10 @@ The testing UI is **completely independent** from auth-api:
 ```bash
 # 1. Ensure auth-api is running (required)
 cd /mnt/d/activity && ./scripts/start-infra.sh
-cd auth-api && docker compose up -d
+cd /mnt/d/activity/auth-api && docker compose up -d
 
 # 2. Start testing UI
-cd testing_ui
+cd /mnt/d/activity/testing_ui
 ./start.sh
 
 # Access the testing page
@@ -541,7 +541,7 @@ docker logs -f auth-testing-ui
 ```
 
 **Common Issues:**
-1. Auth API not running → Start with `cd auth-api && docker compose up -d`
+1. Auth API not running → Start with `cd /mnt/d/activity/auth-api && docker compose up -d`
 2. Network missing → Run `docker network create activity-network`
 3. Code changes not reflected → Rebuild with `docker compose build && docker compose restart`
 4. CORS errors → Ensure auth-api is on port 8000 and CORS is configured
