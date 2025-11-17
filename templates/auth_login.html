@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .hidden {
+            display: none;
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="w-full max-w-md px-4">
+        <!-- Auth Box -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center">
+                <h1 class="text-3xl font-bold text-white mb-2">🔐 Authentication</h1>
+                <p class="text-blue-100 text-sm">Secure access to your account</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200">
+                <button onclick="switchTab('login')" id="tab-login" class="tab-button active flex-1 py-4 px-6 font-semibold text-gray-700">
+                    Login
+                </button>
+                <button onclick="switchTab('register')" id="tab-register" class="tab-button flex-1 py-4 px-6 font-semibold text-gray-700">
+                    Register
+                </button>
+                <button onclick="switchTab('reset')" id="tab-reset" class="tab-button flex-1 py-4 px-6 font-semibold text-gray-700">
+                    Reset
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-8">
+                <!-- Login Tab -->
+                <div id="content-login" class="tab-content">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Welcome Back</h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="login_email" placeholder="you@example.com"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" id="login_password" placeholder="••••••••"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                        </div>
+
+                        <!-- Code Field (hidden initially) -->
+                        <div id="login_code_field" class="hidden slide-in">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">6-Digit Code</label>
+                            <input type="text" id="login_code" placeholder="123456" maxlength="6"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                            <p class="text-xs text-gray-500 mt-1">Enter the code sent to your email</p>
+                        </div>
+
+                        <!-- Organization Field (hidden initially) -->
+                        <div id="login_org_field" class="hidden slide-in">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Organization ID</label>
+                            <input type="text" id="login_org_id" placeholder="org_..."
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                            <p class="text-xs text-gray-500 mt-1">Select your organization</p>
+                            <div id="login_org_list" class="mt-2 text-xs text-gray-600"></div>
+                        </div>
+
+                        <button onclick="handleLogin()" id="login_btn"
+                            class="btn-primary w-full text-white font-bold py-3 px-4 rounded-lg">
+                            Login
+                        </button>
+
+                        <button onclick="verifyLoginCode()" id="login_verify_btn" class="hidden btn-primary w-full text-white font-bold py-3 px-4 rounded-lg">
+                            Verify Code
+                        </button>
+                    </div>
+
+                    <div id="login_response" class="mt-4"></div>
+                </div>
+
+                <!-- Register Tab -->
+                <div id="content-register" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Create Account</h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="register_email" placeholder="you@example.com"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" id="register_password" placeholder="Create a strong password"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                            <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                        </div>
+
+                        <!-- Code Field (hidden initially) -->
+                        <div id="register_code_field" class="hidden slide-in">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
+                            <input type="text" id="register_code" placeholder="123456" maxlength="6"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                            <p class="text-xs text-gray-500 mt-1">Enter the code sent to your email</p>
+                        </div>
+
+                        <button onclick="handleRegister()" id="register_btn"
+                            class="btn-primary w-full text-white font-bold py-3 px-4 rounded-lg">
+                            Register
+                        </button>
+
+                        <button onclick="verifyRegistration()" id="register_verify_btn" class="hidden btn-primary w-full text-white font-bold py-3 px-4 rounded-lg">
+                            Verify Code
+                        </button>
+                    </div>
+
+                    <div id="register_response" class="mt-4"></div>
+                </div>
+
+                <!-- Reset Tab -->
+                <div id="content-reset" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Reset Password</h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="reset_email" placeholder="you@example.com"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                        </div>
+
+                        <!-- Code and New Password Fields (hidden initially) -->
+                        <div id="reset_code_fields" class="hidden slide-in space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Reset Code</label>
+                                <input type="text" id="reset_code" placeholder="123456" maxlength="6"
+                                    class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                                <p class="text-xs text-gray-500 mt-1">Enter the code sent to your email</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" id="reset_new_password" placeholder="Enter new password"
+                                    class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+                            </div>
+                        </div>
+
+                        <button onclick="handleReset()" id="reset_btn"
+                            class="btn-primary w-full text-white font-bold py-3 px-4 rounded-lg">
+                            Send Reset Code
+                        </button>
+
+                        <button onclick="completeReset()" id="reset_complete_btn" class="hidden btn-primary w-full text-white font-bold py-3 px-4 rounded-lg">
+                            Reset Password
+                        </button>
+                    </div>
+
+                    <div id="reset_response" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 px-8 py-4 text-center text-xs text-gray-500">
+                <p>⚠️ Development Environment Only</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8000';
+
+        // Storage for tokens
+        let currentVerificationToken = null;
+        let currentResetToken = null;
+        let requiresOrg = false;
+
+        // Tab Switching
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+
+            // Clear responses
+            clearResponses();
+        }
+
+        // Helper: Display response
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            const bgColor = isError ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300';
+            const textColor = isError ? 'text-red-900' : 'text-green-900';
+            const icon = isError ? '❌' : '✅';
+
+            element.innerHTML = `
+                <div class="p-4 rounded-lg border ${bgColor} ${textColor} slide-in">
+                    <div class="flex items-start gap-2">
+                        <span class="text-lg">${icon}</span>
+                        <div class="flex-1">
+                            <p class="font-semibold mb-1">${isError ? 'Error' : 'Success'}</p>
+                            <pre class="text-xs whitespace-pre-wrap overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearResponses() {
+            document.querySelectorAll('[id$="_response"]').forEach(el => el.innerHTML = '');
+        }
+
+        // Helper: Show loading state
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="p-4 rounded-lg border border-blue-300 bg-blue-50 text-blue-900 slide-in">
+                    <div class="flex items-start gap-2">
+                        <span class="text-lg">⏳</span>
+                        <div class="flex-1">
+                            <p class="font-semibold mb-1">Loading...</p>
+                            <p class="text-xs">Processing your request</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper: Disable button
+        function disableButton(buttonId) {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Helper: Enable button
+        function enableButton(buttonId) {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Helper: Make API call
+        async function apiCall(endpoint, method = 'POST', body = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw { status: response.status, ...data };
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error };
+            }
+        }
+
+        // ===== LOGIN FLOW =====
+        async function handleLogin() {
+            const email = document.getElementById('login_email').value;
+            const password = document.getElementById('login_password').value;
+
+            if (!email || !password) {
+                displayResponse('login_response', { error: 'Email and password required' }, true);
+                return;
+            }
+
+            // Disable button and show loading
+            disableButton('login_btn');
+            showLoading('login_response');
+
+            try {
+                // Step 1: Send login request
+                const result = await apiCall('/api/auth/login', 'POST', { email, password });
+
+                if (result.success) {
+                    displayResponse('login_response', result.data);
+
+                    // Check if code is required
+                    if (result.data.requires_code) {
+                        // Show code field
+                        document.getElementById('login_code_field').classList.remove('hidden');
+                        document.getElementById('login_btn').classList.add('hidden');
+                        document.getElementById('login_verify_btn').classList.remove('hidden');
+                    } else if (result.data.access_token) {
+                        // Login successful with tokens
+                        displayResponse('login_response', {
+                            ...result.data,
+                            message: '✨ Login successful!'
+                        });
+                    }
+                } else {
+                    displayResponse('login_response', result.error, true);
+                }
+            } finally {
+                enableButton('login_btn');
+            }
+        }
+
+        async function verifyLoginCode() {
+            const email = document.getElementById('login_email').value;
+            const password = document.getElementById('login_password').value;
+            const code = document.getElementById('login_code').value;
+
+            if (!code) {
+                displayResponse('login_response', { error: 'Code required' }, true);
+                return;
+            }
+
+            // Disable button and show loading
+            disableButton('login_verify_btn');
+            showLoading('login_response');
+
+            try {
+                // Step 2: Login with code (fix org_id undefined issue)
+                const payload = { email, password, code };
+                if (requiresOrg) {
+                    payload.org_id = document.getElementById('login_org_id').value;
+                }
+
+                const result = await apiCall('/api/auth/login', 'POST', payload);
+
+                if (result.success) {
+                    // Check if organization selection is required
+                    if (result.data.requires_org_selection && result.data.organizations) {
+                        requiresOrg = true;
+                        displayResponse('login_response', {
+                            message: 'Please select an organization',
+                            organizations: result.data.organizations
+                        });
+
+                        // Show org field
+                        document.getElementById('login_org_field').classList.remove('hidden');
+
+                        // Display organizations
+                        const orgList = result.data.organizations.map(org =>
+                            `<div class="p-2 bg-white border rounded mt-1"><strong>${org.name}</strong><br>ID: ${org.id}</div>`
+                        ).join('');
+                        document.getElementById('login_org_list').innerHTML = orgList;
+
+                        // Auto-fill first org
+                        if (result.data.organizations.length > 0) {
+                            document.getElementById('login_org_id').value = result.data.organizations[0].id;
+                        }
+                    } else if (result.data.access_token) {
+                        // Login successful
+                        displayResponse('login_response', {
+                            ...result.data,
+                            message: '✨ Login successful! Tokens received.'
+                        });
+
+                        // Store tokens in localStorage
+                        localStorage.setItem('access_token', result.data.access_token);
+                        localStorage.setItem('refresh_token', result.data.refresh_token);
+
+                        // Reset form after success
+                        setTimeout(() => {
+                            document.getElementById('login_code_field').classList.add('hidden');
+                            document.getElementById('login_org_field').classList.add('hidden');
+                            document.getElementById('login_btn').classList.remove('hidden');
+                            document.getElementById('login_verify_btn').classList.add('hidden');
+                            document.getElementById('login_code').value = '';
+                            requiresOrg = false;
+                        }, 2000);
+                    }
+                } else {
+                    displayResponse('login_response', result.error, true);
+                }
+            } finally {
+                enableButton('login_verify_btn');
+            }
+        }
+
+        // ===== REGISTRATION FLOW =====
+        async function handleRegister() {
+            const email = document.getElementById('register_email').value;
+            const password = document.getElementById('register_password').value;
+
+            if (!email || !password) {
+                displayResponse('register_response', { error: 'Email and password required' }, true);
+                return;
+            }
+
+            // Disable button and show loading
+            disableButton('register_btn');
+            showLoading('register_response');
+
+            try {
+                // Step 1: Register account
+                const result = await apiCall('/api/auth/register', 'POST', { email, password });
+
+                if (result.success) {
+                    currentVerificationToken = result.data.verification_token;
+                    displayResponse('register_response', result.data);
+
+                    // Show code field
+                    document.getElementById('register_code_field').classList.remove('hidden');
+                    document.getElementById('register_btn').classList.add('hidden');
+                    document.getElementById('register_verify_btn').classList.remove('hidden');
+                } else {
+                    displayResponse('register_response', result.error, true);
+                }
+            } finally {
+                enableButton('register_btn');
+            }
+        }
+
+        async function verifyRegistration() {
+            const code = document.getElementById('register_code').value;
+
+            if (!code) {
+                displayResponse('register_response', { error: 'Code required' }, true);
+                return;
+            }
+
+            if (!currentVerificationToken) {
+                displayResponse('register_response', { error: 'Please register first' }, true);
+                return;
+            }
+
+            // Disable button and show loading
+            disableButton('register_verify_btn');
+            showLoading('register_response');
+
+            try {
+                // Step 2: Verify code
+                const result = await apiCall('/api/auth/verify-code', 'POST', {
+                    verification_token: currentVerificationToken,
+                    code: code
+                });
+
+                if (result.success) {
+                    displayResponse('register_response', {
+                        ...result.data,
+                        message: '✨ Registration successful! You can now login.'
+                    });
+
+                    // Reset form after success
+                    setTimeout(() => {
+                        document.getElementById('register_email').value = '';
+                        document.getElementById('register_password').value = '';
+                        document.getElementById('register_code').value = '';
+                        document.getElementById('register_code_field').classList.add('hidden');
+                        document.getElementById('register_btn').classList.remove('hidden');
+                        document.getElementById('register_verify_btn').classList.add('hidden');
+                        currentVerificationToken = null;
+
+                        // Switch to login tab
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    displayResponse('register_response', result.error, true);
+                }
+            } finally {
+                enableButton('register_verify_btn');
+            }
+        }
+
+        // ===== PASSWORD RESET FLOW =====
+        async function handleReset() {
+            const email = document.getElementById('reset_email').value;
+
+            if (!email) {
+                displayResponse('reset_response', { error: 'Email required' }, true);
+                return;
+            }
+
+            // Disable button and show loading
+            disableButton('reset_btn');
+            showLoading('reset_response');
+
+            try {
+                // Step 1: Request reset
+                const result = await apiCall('/api/auth/request-password-reset', 'POST', { email });
+
+                if (result.success) {
+                    currentResetToken = result.data.reset_token;
+                    displayResponse('reset_response', result.data);
+
+                    // Show code and password fields
+                    document.getElementById('reset_code_fields').classList.remove('hidden');
+                    document.getElementById('reset_btn').classList.add('hidden');
+                    document.getElementById('reset_complete_btn').classList.remove('hidden');
+                } else {
+                    displayResponse('reset_response', result.error, true);
+                }
+            } finally {
+                enableButton('reset_btn');
+            }
+        }
+
+        async function completeReset() {
+            const code = document.getElementById('reset_code').value;
+            const newPassword = document.getElementById('reset_new_password').value;
+
+            if (!code || !newPassword) {
+                displayResponse('reset_response', { error: 'Code and new password required' }, true);
+                return;
+            }
+
+            if (!currentResetToken) {
+                displayResponse('reset_response', { error: 'Please request reset first' }, true);
+                return;
+            }
+
+            // Disable button and show loading
+            disableButton('reset_complete_btn');
+            showLoading('reset_response');
+
+            try {
+                // Step 2: Complete reset
+                const result = await apiCall('/api/auth/reset-password', 'POST', {
+                    reset_token: currentResetToken,
+                    code: code,
+                    new_password: newPassword
+                });
+
+                if (result.success) {
+                    displayResponse('reset_response', {
+                        ...result.data,
+                        message: '✨ Password reset successful! You can now login.'
+                    });
+
+                    // Reset form after success
+                    setTimeout(() => {
+                        document.getElementById('reset_email').value = '';
+                        document.getElementById('reset_code').value = '';
+                        document.getElementById('reset_new_password').value = '';
+                        document.getElementById('reset_code_fields').classList.add('hidden');
+                        document.getElementById('reset_btn').classList.remove('hidden');
+                        document.getElementById('reset_complete_btn').classList.add('hidden');
+                        currentResetToken = null;
+
+                        // Switch to login tab
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    displayResponse('reset_response', result.error, true);
+                }
+            } finally {
+                enableButton('reset_complete_btn');
+            }
+        }
+    </script>
+</body>
+</html>
