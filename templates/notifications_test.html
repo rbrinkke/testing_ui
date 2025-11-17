@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications API Testing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .response-box {
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .flow-section {
+            scroll-margin-top: 180px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Global Navigation Menu -->
+    <nav class="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold">🧪 Testing UI</span>
+                </div>
+                <div class="flex gap-2">
+                    <a href="/test/auth" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition flex items-center gap-1">
+                        <span>🔐</span>
+                        <span class="hidden sm:inline">Auth API</span>
+                    </a>
+                    <a href="/test/notifications" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 transition flex items-center gap-1">
+                        <span>🧪</span>
+                        <span class="hidden sm:inline">API Tests</span>
+                    </a>
+                    <a href="/test/notifications/live" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition flex items-center gap-1">
+                        <span>🔔</span>
+                        <span class="hidden sm:inline">Live Feed</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg sticky top-14 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h1 class="text-3xl font-bold">🔔 Notifications API Testing Interface</h1>
+            <p class="text-blue-100 mt-2">Test notification management, settings, and delivery flows</p>
+            <div class="mt-3 flex gap-2 text-sm">
+                <span class="bg-yellow-500 text-yellow-900 px-3 py-1 rounded-full font-semibold">⚠️ TESTING ONLY</span>
+                <span class="bg-white/20 px-3 py-1 rounded-full">Environment: Development</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="bg-white shadow sticky top-[176px] z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex gap-4 py-3 overflow-x-auto">
+                <a href="#setup" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">⚙️ Setup</a>
+                <a href="#create" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">➕ Create</a>
+                <a href="#list" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">📋 List & View</a>
+                <a href="#manage" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">✅ Mark Read</a>
+                <a href="#delete" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">🗑️ Delete</a>
+                <a href="#settings" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">⚙️ Settings</a>
+                <a href="#stored" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition whitespace-nowrap">💾 Stored Data</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Setup Section -->
+        <section id="setup" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                ⚙️ Setup & Configuration
+            </h2>
+
+            <!-- Auto-Detection Status -->
+            <div id="auto_detect_status" class="hidden p-3 rounded-lg border bg-blue-50 border-blue-300 text-blue-900 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold">✅ Auto-detected from Auth page!</span>
+                    <span class="text-xs opacity-75">Token loaded automatically</span>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Quick Actions -->
+                <div class="mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                        <button onclick="loadFromAuthPage()"
+                            class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                            <span class="text-xl">🔗</span>
+                            <span>Load from Auth Page</span>
+                        </button>
+                        <button onclick="quickLogin()"
+                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                            <span class="text-xl">⚡</span>
+                            <span>Quick Login (REAL TOKEN)</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-center text-gray-600 mt-2">
+                        ✅ <strong>Recommended:</strong> Use "Quick Login" for real API testing with valid tokens
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">JWT Bearer Token</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="jwt_token" placeholder="Will be auto-filled on page load..."
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button onclick="clearToken()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm">Clear</button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <span class="font-semibold">Auto-loaded</span> from Auth page •
+                        <span class="text-blue-600 cursor-pointer hover:underline" onclick="loadFromAuthPage()">Refresh</span> •
+                        <span class="text-green-600 cursor-pointer hover:underline" onclick="quickLogin()">Quick Login</span>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">X-Service-Token (for Create)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="service_token" value="shared-secret-token-change-in-production" placeholder="Service token for internal API calls"
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button onclick="document.getElementById('service_token').value='shared-secret-token-change-in-production'"
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm">Default</button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Required only for POST /api/v1/notifications •
+                        <span class="font-semibold">Auto-filled</span> with dev default
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">User ID (UUID)</label>
+                        <input type="text" id="user_id" value="11111111-1111-1111-1111-111111111111"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Actor User ID (Optional)</label>
+                        <input type="text" id="actor_user_id" placeholder="Leave empty for system notifications"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">
+                            Optional • Specify only if notification comes from another user
+                        </p>
+                    </div>
+                </div>
+                <button onclick="testHealth()"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                    🏥 Test Health Check
+                </button>
+                <div id="health_response" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- Create Notification -->
+        <section id="create" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                ➕ Create Notification
+                <span class="text-sm font-normal text-gray-500">(Service-to-Service)</span>
+            </h2>
+
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notification Type</label>
+                            <select id="create_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="comment">comment</option>
+                                <option value="reaction">reaction</option>
+                                <option value="mention">mention</option>
+                                <option value="activity_invite">activity_invite</option>
+                                <option value="activity_reminder">activity_reminder</option>
+                                <option value="activity_update">activity_update</option>
+                                <option value="community_invite">community_invite</option>
+                                <option value="new_member">new_member</option>
+                                <option value="new_post">new_post</option>
+                                <option value="profile_view">profile_view (Premium)</option>
+                                <option value="new_favorite">new_favorite (Premium)</option>
+                                <option value="system">system</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Target Type</label>
+                            <select id="create_target_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="post">post</option>
+                                <option value="activity">activity</option>
+                                <option value="comment">comment</option>
+                                <option value="user">user</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" id="create_title" placeholder="Notification title (max 255 chars)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Message (Optional)</label>
+                        <textarea id="create_message" rows="2" placeholder="Optional notification message"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Payload (Optional JSON)</label>
+                        <textarea id="create_payload" rows="3" placeholder='{"example_key": "example_value"}'
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"></textarea>
+                    </div>
+                    <button onclick="createNotification()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Create Notification
+                    </button>
+                </div>
+                <div id="create_response" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- List & View Notifications -->
+        <section id="list" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                📋 List & View Notifications
+            </h2>
+
+            <!-- List Notifications -->
+            <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">List Notifications (Paginated)</h3>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Filter</label>
+                            <select id="list_status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All</option>
+                                <option value="unread" selected>unread</option>
+                                <option value="read">read</option>
+                                <option value="archived">archived</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type Filter</label>
+                            <select id="list_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All</option>
+                                <option value="comment">comment</option>
+                                <option value="reaction">reaction</option>
+                                <option value="mention">mention</option>
+                                <option value="activity_invite">activity_invite</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Limit</label>
+                            <input type="number" id="list_limit" value="20" min="1" max="100"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Offset</label>
+                            <input type="number" id="list_offset" value="0" min="0"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <button onclick="listNotifications()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        List Notifications
+                    </button>
+                </div>
+                <div id="list_response" class="mt-3"></div>
+            </div>
+
+            <!-- Get Unread Count -->
+            <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Get Unread Count</h3>
+                <div class="space-y-3">
+                    <button onclick="getUnreadCount()"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Get Unread Count
+                    </button>
+                </div>
+                <div id="unread_count_response" class="mt-3"></div>
+            </div>
+
+            <!-- Get Single Notification -->
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Get Single Notification by ID</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notification ID (UUID)</label>
+                        <input type="text" id="get_notification_id" placeholder="UUID from list response"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Auto-filled from create or list responses</p>
+                    </div>
+                    <button onclick="getSingleNotification()"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Get Notification
+                    </button>
+                </div>
+                <div id="get_single_response" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- Mark Read Operations -->
+        <section id="manage" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                ✅ Mark Read Operations
+            </h2>
+
+            <!-- Mark Single Read -->
+            <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Mark Single Notification as Read</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notification ID (UUID)</label>
+                        <input type="text" id="mark_read_id" placeholder="UUID from list response"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button onclick="useLastNotificationId('mark_read_id')" class="mt-1 text-xs text-blue-600 hover:underline">
+                            Use last notification ID
+                        </button>
+                    </div>
+                    <button onclick="markSingleRead()"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Mark as Read
+                    </button>
+                </div>
+                <div id="mark_single_response" class="mt-3"></div>
+            </div>
+
+            <!-- Mark Bulk Read -->
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Mark Multiple Notifications as Read (Bulk)</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Operation Type</label>
+                        <select id="bulk_operation_type" onchange="toggleBulkOptions()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="specific">Mark specific IDs</option>
+                            <option value="all">Mark all unread</option>
+                            <option value="by_type">Mark all of specific type</option>
+                        </select>
+                    </div>
+                    <div id="bulk_specific_ids" class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notification IDs (comma-separated UUIDs)</label>
+                        <textarea id="bulk_ids" rows="3" placeholder="uuid1, uuid2, uuid3"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"></textarea>
+                    </div>
+                    <div id="bulk_by_type" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notification Type</label>
+                        <select id="bulk_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="comment">comment</option>
+                            <option value="reaction">reaction</option>
+                            <option value="mention">mention</option>
+                            <option value="activity_invite">activity_invite</option>
+                        </select>
+                    </div>
+                    <button onclick="markBulkRead()"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Mark as Read (Bulk)
+                    </button>
+                </div>
+                <div id="mark_bulk_response" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- Delete Operations -->
+        <section id="delete" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🗑️ Delete Operations
+            </h2>
+
+            <!-- Archive (Soft Delete) -->
+            <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Archive Notification (Soft Delete)</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notification ID (UUID)</label>
+                        <input type="text" id="archive_id" placeholder="UUID from list response"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button onclick="useLastNotificationId('archive_id')" class="mt-1 text-xs text-blue-600 hover:underline">
+                            Use last notification ID
+                        </button>
+                    </div>
+                    <button onclick="archiveNotification()"
+                        class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Archive Notification
+                    </button>
+                </div>
+                <div id="archive_response" class="mt-3"></div>
+            </div>
+
+            <!-- Hard Delete -->
+            <div class="p-4 border border-red-300 rounded-lg bg-red-50">
+                <h3 class="text-lg font-semibold text-red-800 mb-3">⚠️ Permanent Delete (Hard Delete)</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-red-700 mb-1">Notification ID (UUID)</label>
+                        <input type="text" id="delete_id" placeholder="UUID from list response"
+                            class="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <button onclick="useLastNotificationId('delete_id')" class="mt-1 text-xs text-red-600 hover:underline">
+                            Use last notification ID
+                        </button>
+                    </div>
+                    <button onclick="permanentDelete()"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Permanent Delete (Cannot be undone!)
+                    </button>
+                </div>
+                <div id="delete_response" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- Settings Management -->
+        <section id="settings" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                ⚙️ Settings Management
+            </h2>
+
+            <!-- Get Settings -->
+            <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Get Notification Settings</h3>
+                <div class="space-y-3">
+                    <button onclick="getSettings()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Get Settings
+                    </button>
+                </div>
+                <div id="get_settings_response" class="mt-3"></div>
+            </div>
+
+            <!-- Update Settings -->
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Update Notification Settings</h3>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_email" checked class="rounded">
+                            <span class="text-sm">Email Notifications</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_push" checked class="rounded">
+                            <span class="text-sm">Push Notifications</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_activity" checked class="rounded">
+                            <span class="text-sm">Activity Reminders</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_community" checked class="rounded">
+                            <span class="text-sm">Community Updates</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_friends" checked class="rounded">
+                            <span class="text-sm">Friend Requests</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_marketing" class="rounded">
+                            <span class="text-sm">Marketing Emails</span>
+                        </label>
+                    </div>
+                    <div class="border-t pt-3">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="setting_ghost" class="rounded">
+                            <span class="text-sm font-semibold">👻 Ghost Mode (Premium Only)</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">Disable profile view notifications</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                            <input type="text" id="setting_language" value="en" placeholder="en"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                            <input type="text" id="setting_timezone" value="UTC" placeholder="UTC"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <button onclick="updateSettings()"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Update Settings
+                    </button>
+                </div>
+                <div id="update_settings_response" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- Stored Data Display -->
+        <section id="stored" class="flow-section bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                💾 Stored Tokens & Data
+            </h2>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold text-gray-800">Current Session Data</h3>
+                    <button onclick="clearStoredData()"
+                        class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 transition">
+                        Clear All
+                    </button>
+                </div>
+                <div id="stored_data" class="response-box text-sm bg-white p-3 rounded border border-gray-200"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">Notifications API Testing Interface v1.0.0</p>
+            <p class="text-xs text-gray-400 mt-1">For development and testing purposes only</p>
+        </div>
+    </footer>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8006';
+
+        // Storage keys
+        const STORAGE = {
+            JWT_TOKEN: 'notif_test_jwt_token',
+            SERVICE_TOKEN: 'notif_test_service_token',
+            USER_ID: 'notif_test_user_id',
+            ACTOR_USER_ID: 'notif_test_actor_user_id',
+            LAST_NOTIFICATION_ID: 'notif_test_last_notification_id'
+        };
+
+        // Helper: Display response
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            const bgColor = isError ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300';
+            const textColor = isError ? 'text-red-900' : 'text-green-900';
+
+            element.innerHTML = `
+                <div class="p-3 rounded-lg border ${bgColor} ${textColor}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-semibold">${isError ? '❌ Error' : '✅ Success'}</span>
+                        <span class="text-xs opacity-75">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <pre class="response-box text-xs mt-2 overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+            updateStoredDataDisplay();
+        }
+
+        // Helper: Make API call
+        async function apiCall(endpoint, method = 'GET', body = null, useServiceToken = false) {
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (useServiceToken) {
+                    const serviceToken = document.getElementById('service_token').value || localStorage.getItem(STORAGE.SERVICE_TOKEN);
+                    if (serviceToken) {
+                        headers['X-Service-Token'] = serviceToken;
+                    }
+                } else {
+                    const jwtToken = document.getElementById('jwt_token').value || localStorage.getItem(STORAGE.JWT_TOKEN);
+                    if (jwtToken) {
+                        headers['Authorization'] = `Bearer ${jwtToken}`;
+                    }
+                }
+
+                const options = { method, headers };
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw { status: response.status, ...data };
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error };
+            }
+        }
+
+        // Helper: Generate UUID
+        function generateUUID() {
+            return crypto.randomUUID ? crypto.randomUUID() :
+                'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                    const r = Math.random() * 16 | 0;
+                    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+                });
+        }
+
+        // Helper: Validate JWT token
+        function validateToken(token) {
+            if (!token || token.trim() === '') {
+                return { valid: false, reason: 'Empty token', type: 'error' };
+            }
+
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                return { valid: false, reason: 'Invalid JWT format', type: 'error' };
+            }
+
+            // Check for test signature
+            if (parts[2] === 'test-signature-dev-only') {
+                return { valid: false, reason: 'Unsigned test token', type: 'warning' };
+            }
+
+            // Check if signature looks real (base64url encoded, min length)
+            if (parts[2].length < 32) {
+                return { valid: false, reason: 'Suspicious signature', type: 'warning' };
+            }
+
+            // Try to decode payload to check expiry
+            try {
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                if (payload.exp) {
+                    const now = Math.floor(Date.now() / 1000);
+                    if (payload.exp < now) {
+                        return { valid: false, reason: 'Token expired', type: 'error' };
+                    }
+                }
+                return { valid: true, reason: 'Valid JWT', type: 'success', payload };
+            } catch (e) {
+                return { valid: false, reason: 'Cannot decode payload', type: 'error' };
+            }
+        }
+
+        // Helper: Show token validation status
+        function showTokenStatus(elementId) {
+            const token = document.getElementById('jwt_token').value;
+            const validation = validateToken(token);
+
+            const statusHtml = validation.valid
+                ? `<div class="flex items-center gap-2 text-green-700 bg-green-50 border border-green-300 px-3 py-2 rounded-lg">
+                     <span class="text-lg">✅</span>
+                     <span class="font-semibold">Token geldig</span>
+                     <span class="text-xs opacity-75">• ${validation.reason}</span>
+                   </div>`
+                : `<div class="flex items-center gap-2 ${validation.type === 'warning' ? 'text-yellow-700 bg-yellow-50 border-yellow-300' : 'text-red-700 bg-red-50 border-red-300'} border px-3 py-2 rounded-lg">
+                     <span class="text-lg">${validation.type === 'warning' ? '⚠️' : '❌'}</span>
+                     <span class="font-semibold">Token ${validation.type === 'warning' ? 'ongeldig' : 'fout'}</span>
+                     <span class="text-xs opacity-75">• ${validation.reason}</span>
+                   </div>`;
+
+            // Prepend to response element
+            const responseEl = document.getElementById(elementId);
+            if (responseEl) {
+                const existingContent = responseEl.innerHTML;
+                responseEl.innerHTML = statusHtml + (existingContent ? '<div class="mt-2">' + existingContent + '</div>' : '');
+            }
+        }
+
+        // Helper: Extract user_id from JWT token
+        function extractUserIdFromToken(token) {
+            if (!token) return null;
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                return payload.sub || null;
+            } catch (e) {
+                console.error('Failed to extract user_id from token:', e);
+                return null;
+            }
+        }
+
+        // Helper: Auto-fill user_id from current JWT token
+        function autoFillUserIdFromToken() {
+            const token = document.getElementById('jwt_token').value;
+            if (!token) return;
+
+            const userId = extractUserIdFromToken(token);
+            if (userId) {
+                document.getElementById('user_id').value = userId;
+                localStorage.setItem(STORAGE.USER_ID, userId);
+                console.log('✅ Auto-filled user_id from JWT:', userId);
+            }
+        }
+
+        // ===== AUTOMATION FUNCTIONS =====
+
+        // 1. Load from Auth Page (shared localStorage)
+        function loadFromAuthPage() {
+            const authToken = localStorage.getItem('auth_test_access_token');
+            const authUserId = localStorage.getItem('auth_test_user_id');
+
+            if (authToken) {
+                document.getElementById('jwt_token').value = authToken;
+                localStorage.setItem(STORAGE.JWT_TOKEN, authToken);
+
+                // AUTO-EXTRACT user_id from JWT token
+                autoFillUserIdFromToken();
+
+                // Show success message
+                const statusDiv = document.getElementById('auto_detect_status');
+                statusDiv.classList.remove('hidden');
+                setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+
+                alert('✅ Token loaded from Auth page!');
+                updateStoredDataDisplay();
+            } else {
+                alert('⚠️ No token found in Auth page. Please login there first, or use Quick Login.');
+            }
+        }
+
+        // 2. Quick Login (auto-login with test credentials)
+        async function quickLogin() {
+            const testEmail = 'test@example.com';
+            const testPassword = 'TestPassword123!';
+
+            try {
+                // Step 1: Initial login (triggers code)
+                const login1Response = await fetch('http://localhost:8000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: testEmail, password: testPassword })
+                });
+
+                const login1Data = await login1Response.json();
+
+                // Check if SKIP_LOGIN_CODE is enabled (direct token)
+                if (login1Data.access_token) {
+                    document.getElementById('jwt_token').value = login1Data.access_token;
+                    localStorage.setItem(STORAGE.JWT_TOKEN, login1Data.access_token);
+
+                    // AUTO-EXTRACT user_id from JWT token (overrides API response)
+                    autoFillUserIdFromToken();
+
+                    alert('✅ Quick Login successful! Token loaded.');
+                    updateStoredDataDisplay();
+                } else {
+                    alert('⚠️ Quick Login requires auth-api SKIP_LOGIN_CODE=true.\nPlease use "Generate Test Token" instead.');
+                }
+            } catch (error) {
+                console.error('Quick login failed:', error);
+                alert('❌ Quick Login failed. Auth API might be down.\nTry "Generate Test Token" instead.');
+            }
+        }
+
+        // 3. Generate Test Token (development only)
+        function generateTestToken() {
+            // Generate a test JWT token (development only!)
+            const header = { alg: 'HS256', typ: 'JWT' };
+            const testUserId = generateUUID();
+            const payload = {
+                sub: testUserId,
+                email: 'test@example.com',
+                subscription_level: 'premium',
+                exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+            };
+
+            // Base64 URL encode
+            const base64UrlEncode = (obj) => {
+                return btoa(JSON.stringify(obj))
+                    .replace(/\+/g, '-')
+                    .replace(/\//g, '_')
+                    .replace(/=/g, '');
+            };
+
+            const headerEncoded = base64UrlEncode(header);
+            const payloadEncoded = base64UrlEncode(payload);
+
+            // Create unsigned token (for testing only!)
+            const testToken = `${headerEncoded}.${payloadEncoded}.test-signature-dev-only`;
+
+            document.getElementById('jwt_token').value = testToken;
+            document.getElementById('user_id').value = testUserId;
+            localStorage.setItem(STORAGE.JWT_TOKEN, testToken);
+            localStorage.setItem(STORAGE.USER_ID, testUserId);
+
+            alert('⚠️ Test token generated!\n\nNOTE: This is a DEVELOPMENT-ONLY token.\nIt will NOT work with real notifications-api.\n\nFor real testing, use "Quick Login" or login via Auth page.');
+            updateStoredDataDisplay();
+        }
+
+        // Clear token
+        function clearToken() {
+            document.getElementById('jwt_token').value = '';
+            localStorage.removeItem(STORAGE.JWT_TOKEN);
+            updateStoredDataDisplay();
+        }
+
+        // ===== END AUTOMATION FUNCTIONS =====
+
+        // Helper: Use last notification ID
+        function useLastNotificationId(inputId) {
+            const lastId = localStorage.getItem(STORAGE.LAST_NOTIFICATION_ID);
+            if (lastId) {
+                document.getElementById(inputId).value = lastId;
+            } else {
+                alert('No notification ID stored. Create or list notifications first.');
+            }
+        }
+
+        // Toggle bulk operation options
+        function toggleBulkOptions() {
+            const type = document.getElementById('bulk_operation_type').value;
+            document.getElementById('bulk_specific_ids').style.display = type === 'specific' ? 'block' : 'none';
+            document.getElementById('bulk_by_type').style.display = type === 'by_type' ? 'block' : 'none';
+        }
+
+        // Health Check
+        async function testHealth() {
+            const result = await apiCall('/health', 'GET', null, false);
+            displayResponse('health_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Create Notification
+        async function createNotification() {
+            // Show token validation status
+            showTokenStatus('create_response');
+
+            const userId = document.getElementById('user_id').value;
+            const actorUserId = document.getElementById('actor_user_id').value;
+            const type = document.getElementById('create_type').value;
+            const targetType = document.getElementById('create_target_type').value;
+            const title = document.getElementById('create_title').value;
+            const message = document.getElementById('create_message').value;
+            const payloadText = document.getElementById('create_payload').value;
+
+            if (!userId || !title) {
+                displayResponse('create_response', { error: 'User ID and title required' }, true);
+                return;
+            }
+
+            let payload = null;
+            if (payloadText) {
+                try {
+                    payload = JSON.parse(payloadText);
+                } catch (e) {
+                    displayResponse('create_response', { error: 'Invalid JSON in payload field' }, true);
+                    return;
+                }
+            }
+
+            const body = {
+                user_id: userId,
+                actor_user_id: actorUserId || null,
+                notification_type: type,
+                target_type: targetType,
+                target_id: generateUUID(),
+                title: title,
+                message: message || null,
+                payload: payload
+            };
+
+            const result = await apiCall('/api/v1/notifications', 'POST', body, true);
+
+            if (result.success) {
+                if (result.data.notification_id) {
+                    localStorage.setItem(STORAGE.LAST_NOTIFICATION_ID, result.data.notification_id);
+                    document.getElementById('get_notification_id').value = result.data.notification_id;
+                }
+                displayResponse('create_response', result.data);
+            } else {
+                displayResponse('create_response', result.error, true);
+            }
+        }
+
+        // List Notifications
+        async function listNotifications() {
+            // Show token validation status
+            showTokenStatus('list_response');
+
+            const status = document.getElementById('list_status').value;
+            const type = document.getElementById('list_type').value;
+            const limit = document.getElementById('list_limit').value;
+            const offset = document.getElementById('list_offset').value;
+
+            const params = new URLSearchParams();
+            if (status) params.append('status', status);
+            if (type) params.append('type', type);
+            params.append('limit', limit);
+            params.append('offset', offset);
+
+            const result = await apiCall(`/api/v1/notifications?${params.toString()}`, 'GET');
+
+            if (result.success) {
+                // Store first notification ID if available
+                if (result.data.notifications && result.data.notifications.length > 0) {
+                    const firstId = result.data.notifications[0].notification_id;
+                    localStorage.setItem(STORAGE.LAST_NOTIFICATION_ID, firstId);
+                    document.getElementById('get_notification_id').value = firstId;
+                }
+                displayResponse('list_response', result.data);
+            } else {
+                displayResponse('list_response', result.error, true);
+            }
+        }
+
+        // Get Unread Count
+        async function getUnreadCount() {
+            // Show token validation status
+            showTokenStatus('unread_count_response');
+
+            const result = await apiCall('/api/v1/notifications/unread/count', 'GET');
+            displayResponse('unread_count_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Get Single Notification
+        async function getSingleNotification() {
+            // Show token validation status
+            showTokenStatus('get_single_response');
+
+            const id = document.getElementById('get_notification_id').value;
+            if (!id) {
+                displayResponse('get_single_response', { error: 'Notification ID required' }, true);
+                return;
+            }
+
+            const result = await apiCall(`/api/v1/notifications/${id}`, 'GET');
+            displayResponse('get_single_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Mark Single Read
+        async function markSingleRead() {
+            // Show token validation status
+            showTokenStatus('mark_single_response');
+
+            const id = document.getElementById('mark_read_id').value;
+            if (!id) {
+                displayResponse('mark_single_response', { error: 'Notification ID required' }, true);
+                return;
+            }
+
+            const result = await apiCall(`/api/v1/notifications/${id}/read`, 'PATCH');
+            displayResponse('mark_single_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Mark Bulk Read
+        async function markBulkRead() {
+            // Show token validation status
+            showTokenStatus('mark_bulk_response');
+
+            const operationType = document.getElementById('bulk_operation_type').value;
+            let body = {};
+
+            if (operationType === 'specific') {
+                const idsText = document.getElementById('bulk_ids').value;
+                if (!idsText) {
+                    displayResponse('mark_bulk_response', { error: 'Notification IDs required' }, true);
+                    return;
+                }
+                body.notification_ids = idsText.split(',').map(id => id.trim());
+            } else if (operationType === 'all') {
+                body.mark_all = true;
+            } else if (operationType === 'by_type') {
+                body.mark_all = true;
+                body.notification_type = document.getElementById('bulk_type').value;
+            }
+
+            const result = await apiCall('/api/v1/notifications/mark-read', 'POST', body);
+            displayResponse('mark_bulk_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Archive Notification
+        async function archiveNotification() {
+            // Show token validation status
+            showTokenStatus('archive_response');
+
+            const id = document.getElementById('archive_id').value;
+            if (!id) {
+                displayResponse('archive_response', { error: 'Notification ID required' }, true);
+                return;
+            }
+
+            const result = await apiCall(`/api/v1/notifications/${id}?permanent=false`, 'DELETE');
+            displayResponse('archive_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Permanent Delete
+        async function permanentDelete() {
+            // Show token validation status
+            showTokenStatus('delete_response');
+
+            const id = document.getElementById('delete_id').value;
+            if (!id) {
+                displayResponse('delete_response', { error: 'Notification ID required' }, true);
+                return;
+            }
+
+            if (!confirm('⚠️ Permanently delete this notification? This cannot be undone!')) {
+                return;
+            }
+
+            const result = await apiCall(`/api/v1/notifications/${id}?permanent=true`, 'DELETE');
+            displayResponse('delete_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Get Settings
+        async function getSettings() {
+            // Show token validation status
+            showTokenStatus('get_settings_response');
+
+            const result = await apiCall('/api/v1/settings', 'GET');
+            displayResponse('get_settings_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Update Settings
+        async function updateSettings() {
+            // Show token validation status
+            showTokenStatus('update_settings_response');
+
+            const body = {
+                email_notifications: document.getElementById('setting_email').checked,
+                push_notifications: document.getElementById('setting_push').checked,
+                activity_reminders: document.getElementById('setting_activity').checked,
+                community_updates: document.getElementById('setting_community').checked,
+                friend_requests: document.getElementById('setting_friends').checked,
+                marketing_emails: document.getElementById('setting_marketing').checked,
+                ghost_mode: document.getElementById('setting_ghost').checked,
+                language: document.getElementById('setting_language').value,
+                timezone: document.getElementById('setting_timezone').value
+            };
+
+            const result = await apiCall('/api/v1/settings', 'PATCH', body);
+            displayResponse('update_settings_response', result.success ? result.data : result.error, !result.success);
+        }
+
+        // Display stored data
+        function updateStoredDataDisplay() {
+            const data = {
+                jwt_token: localStorage.getItem(STORAGE.JWT_TOKEN) || document.getElementById('jwt_token').value || 'Not set',
+                service_token: localStorage.getItem(STORAGE.SERVICE_TOKEN) || document.getElementById('service_token').value || 'Not set',
+                user_id: localStorage.getItem(STORAGE.USER_ID) || document.getElementById('user_id').value || 'Not set',
+                actor_user_id: localStorage.getItem(STORAGE.ACTOR_USER_ID) || document.getElementById('actor_user_id').value || 'Not set',
+                last_notification_id: localStorage.getItem(STORAGE.LAST_NOTIFICATION_ID) || 'Not set',
+                stored_at: new Date().toISOString()
+            };
+
+            document.getElementById('stored_data').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Clear all stored data
+        function clearStoredData() {
+            if (confirm('Clear all stored tokens and data?')) {
+                Object.values(STORAGE).forEach(key => localStorage.removeItem(key));
+                updateStoredDataDisplay();
+                alert('All stored data cleared!');
+            }
+        }
+
+        // Save inputs to localStorage
+        function saveInputsToStorage() {
+            const jwtToken = document.getElementById('jwt_token').value;
+            const serviceToken = document.getElementById('service_token').value;
+            const userId = document.getElementById('user_id').value;
+            const actorUserId = document.getElementById('actor_user_id').value;
+
+            if (jwtToken) localStorage.setItem(STORAGE.JWT_TOKEN, jwtToken);
+            if (serviceToken) localStorage.setItem(STORAGE.SERVICE_TOKEN, serviceToken);
+            if (userId) localStorage.setItem(STORAGE.USER_ID, userId);
+            if (actorUserId) localStorage.setItem(STORAGE.ACTOR_USER_ID, actorUserId);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // AUTO-DETECT: Try to load from auth page first
+            let jwtToken = localStorage.getItem(STORAGE.JWT_TOKEN);
+            let userId = localStorage.getItem(STORAGE.USER_ID);
+
+            // If no local token, try auth page localStorage
+            if (!jwtToken) {
+                const authToken = localStorage.getItem('auth_test_access_token');
+
+                if (authToken) {
+                    jwtToken = authToken;
+                    // Save to notifications storage
+                    localStorage.setItem(STORAGE.JWT_TOKEN, authToken);
+
+                    // Show auto-detect status
+                    const statusDiv = document.getElementById('auto_detect_status');
+                    statusDiv.classList.remove('hidden');
+                    setTimeout(() => statusDiv.classList.add('hidden'), 5000);
+                }
+            }
+
+            // Load all stored values
+            const serviceToken = localStorage.getItem(STORAGE.SERVICE_TOKEN);
+            const actorUserId = localStorage.getItem(STORAGE.ACTOR_USER_ID);
+
+            if (jwtToken) {
+                document.getElementById('jwt_token').value = jwtToken;
+                // AUTO-EXTRACT user_id from JWT token
+                const extractedUserId = extractUserIdFromToken(jwtToken);
+                if (extractedUserId) {
+                    document.getElementById('user_id').value = extractedUserId;
+                    localStorage.setItem(STORAGE.USER_ID, extractedUserId);
+                    console.log('✅ Auto-extracted user_id from JWT on page load:', extractedUserId);
+                }
+            }
+            if (serviceToken) document.getElementById('service_token').value = serviceToken;
+            if (actorUserId) document.getElementById('actor_user_id').value = actorUserId;
+
+            // Save inputs on change
+            document.getElementById('jwt_token').addEventListener('change', saveInputsToStorage);
+            document.getElementById('service_token').addEventListener('change', saveInputsToStorage);
+            document.getElementById('user_id').addEventListener('change', saveInputsToStorage);
+            document.getElementById('actor_user_id').addEventListener('change', saveInputsToStorage);
+
+            updateStoredDataDisplay();
+
+            // Auto-refresh stored data display every 5 seconds
+            setInterval(updateStoredDataDisplay, 5000);
+        });
+    </script>
+</body>
+</html>

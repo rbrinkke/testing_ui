@@ -61,3 +61,47 @@ async def auth_login_page(request: Request):
             "title": "Login - Authentication",
         }
     )
+
+
+@router.get("/notifications", response_class=HTMLResponse, summary="Notifications API Testing Page")
+async def notifications_testing_page(request: Request):
+    """
+    Serves the notifications API testing interface.
+
+    This page allows testing all notification flows:
+    - Create notifications (service-to-service)
+    - List notifications (with filtering and pagination)
+    - Get unread count
+    - Mark notifications as read (single and bulk)
+    - Delete/archive notifications
+    - Manage notification settings
+    """
+    return templates.TemplateResponse(
+        "notifications_test.html",
+        {
+            "request": request,
+            "title": "Notifications API Testing Interface",
+        }
+    )
+
+
+@router.get("/notifications/live", response_class=HTMLResponse, summary="Notifications Live Feed Page")
+async def notifications_live_page(request: Request):
+    """
+    Serves the live notifications feed interface.
+
+    This page provides a production-ready notification interface with:
+    - Professional notification cards with type-based styling
+    - Actor avatars and relative timestamps
+    - Smart filtering (status and type filters)
+    - Mark as read and delete actions
+    - Auto-refresh polling (30s interval)
+    - Unread count badges
+    """
+    return templates.TemplateResponse(
+        "notifications_live.html",
+        {
+            "request": request,
+            "title": "Notifications - Live Feed",
+        }
+    )

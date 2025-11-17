@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Live Feed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .notification-card {
+            transition: all 0.2s ease;
+        }
+        .notification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .notification-card.unread {
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(to right, #eff6ff 0%, #ffffff 10%);
+        }
+        .notification-card.read {
+            opacity: 0.7;
+        }
+        .actor-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .actor-avatar-fallback {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .notification-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .badge-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Global Navigation Menu -->
+    <nav class="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold">🧪 Testing UI</span>
+                </div>
+                <div class="flex gap-2">
+                    <a href="/test/auth" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition flex items-center gap-1">
+                        <span>🔐</span>
+                        <span class="hidden sm:inline">Auth API</span>
+                    </a>
+                    <a href="/test/notifications" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition flex items-center gap-1">
+                        <span>🧪</span>
+                        <span class="hidden sm:inline">API Tests</span>
+                    </a>
+                    <a href="/test/notifications/live" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 transition flex items-center gap-1">
+                        <span>🔔</span>
+                        <span class="hidden sm:inline">Live Feed</span>
+                        <span id="nav_unread_badge" class="hidden bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-1">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg sticky top-14 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center gap-2">
+                        🔔 Notifications
+                        <span id="header_unread_count" class="hidden bg-white/20 text-sm px-3 py-1 rounded-full">0 unread</span>
+                    </h1>
+                    <p class="text-blue-100 mt-2">Real-time notification feed and management</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="refreshFeed()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                        <span id="refresh_icon">🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                    <button onclick="markAllAsRead()" id="mark_all_btn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        ✓ Mark All Read
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- Filters Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-lg p-6 sticky top-32">
+                    <h3 class="text-lg font-bold mb-4">Filters</h3>
+
+                    <!-- Status Filter -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Status</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="status_filter" value="all" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">All</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="status_filter" value="unread" onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm flex items-center gap-2">
+                                    Unread
+                                    <span id="filter_unread_count" class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">0</span>
+                                </span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="status_filter" value="read" onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">Read</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Type Filter -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Type</h4>
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" value="all" checked onchange="toggleAllTypes(this)" class="mr-2">
+                                <span class="text-sm font-semibold">All Types</span>
+                            </label>
+                            <hr class="my-2">
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="comment" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">💬 Comments</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="reaction" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">❤️ Reactions</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="mention" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">@ Mentions</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="activity_invite" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">🎯 Activity Invites</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="activity_reminder" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">⏰ Activity Reminders</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="community_invite" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">👥 Community Invites</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="new_post" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">📝 New Posts</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer type-filter">
+                                <input type="checkbox" value="system" checked onchange="applyFilters()" class="mr-2">
+                                <span class="text-sm">⚙️ System</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Quick Actions</h4>
+                        <button onclick="quickLogin()" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm py-2 px-3 rounded-lg mb-2 transition">
+                            ⚡ Quick Login
+                        </button>
+                        <button onclick="clearFilters()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm py-2 px-3 rounded-lg transition">
+                            🔄 Reset Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Feed -->
+            <div class="lg:col-span-3">
+                <!-- Loading State -->
+                <div id="loading_state" class="hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                        <div class="animate-spin text-4xl mb-4">🔄</div>
+                        <p class="text-gray-600">Loading notifications...</p>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty_state" class="hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+                        <div class="text-6xl mb-4">🔔</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">No notifications</h3>
+                        <p class="text-gray-600">You're all caught up! No new notifications.</p>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="error_state" class="hidden">
+                    <div class="bg-red-50 border border-red-300 rounded-lg p-6">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">❌</span>
+                            <div>
+                                <h3 class="font-bold text-red-900">Error loading notifications</h3>
+                                <p id="error_message" class="text-red-700 text-sm mt-1"></p>
+                            </div>
+                        </div>
+                        <button onclick="refreshFeed()" class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notifications List -->
+                <div id="notifications_list" class="space-y-4">
+                    <!-- Notification cards will be inserted here -->
+                </div>
+
+                <!-- Load More -->
+                <div id="load_more_container" class="hidden mt-6 text-center">
+                    <button onclick="loadMore()" id="load_more_btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                        Load More Notifications
+                    </button>
+                    <p id="pagination_info" class="text-sm text-gray-600 mt-2"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8006';
+        const AUTH_API_BASE = 'http://localhost:8000';
+        const STORAGE = {
+            // Use same keys as auth_test.html for token sharing
+            JWT_TOKEN: 'auth_test_access_token',
+            USER_ID: 'auth_test_user_id',
+            REFRESH_TOKEN: 'auth_test_refresh_token',
+            ORG_ID: 'auth_test_org_id',
+            EMAIL: 'auth_test_email'
+        };
+        const POLL_INTERVAL = 30000; // 30 seconds
+
+        // State
+        let currentPage = 0;
+        let currentLimit = 20;
+        let totalNotifications = 0;
+        let pollTimer = null;
+
+        // Notification type styling
+        const NOTIFICATION_STYLES = {
+            comment: { icon: '💬', color: 'blue', bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-900' },
+            reaction: { icon: '❤️', color: 'pink', bg: 'bg-pink-50', border: 'border-pink-300', text: 'text-pink-900' },
+            mention: { icon: '@', color: 'blue', bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-900' },
+            activity_invite: { icon: '🎯', color: 'indigo', bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-900' },
+            activity_reminder: { icon: '⏰', color: 'orange', bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-900' },
+            activity_update: { icon: '🔄', color: 'yellow', bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-900' },
+            community_invite: { icon: '👥', color: 'purple', bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-900' },
+            new_member: { icon: '👋', color: 'green', bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-900' },
+            new_post: { icon: '📝', color: 'indigo', bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-900' },
+            profile_view: { icon: '👁️', color: 'gray', bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-900', premium: true },
+            new_favorite: { icon: '⭐', color: 'yellow', bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-900', premium: true },
+            system: { icon: '⚙️', color: 'red', bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-900' }
+        };
+
+        // Helper: API Call
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const token = localStorage.getItem(STORAGE.JWT_TOKEN);
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const options = { method, headers };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Include full response in error for debugging
+                    throw {
+                        status: response.status,
+                        statusText: response.statusText,
+                        response: data,
+                        detail: data.detail,
+                        message: data.message
+                    };
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false, error };
+            }
+        }
+
+        // Helper: Extract user_id from JWT
+        function extractUserIdFromToken(token) {
+            if (!token) return null;
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                return payload.sub || null;
+            } catch (e) {
+                console.error('Failed to extract user_id from token:', e);
+                return null;
+            }
+        }
+
+        // Helper: Relative time
+        function getRelativeTime(dateString) {
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+
+            if (diffSec < 60) return 'just now';
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffHour < 24) return `${diffHour}h ago`;
+            if (diffDay === 1) return 'yesterday';
+            if (diffDay < 7) return `${diffDay}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        // Helper: Get initials from name
+        function getInitials(firstName, lastName) {
+            const first = (firstName || '?').charAt(0).toUpperCase();
+            const last = (lastName || '').charAt(0).toUpperCase();
+            return first + last;
+        }
+
+        // Render notification card
+        function renderNotificationCard(notification) {
+            const style = NOTIFICATION_STYLES[notification.notification_type] || NOTIFICATION_STYLES.system;
+            const isUnread = notification.status === 'unread';
+
+            const card = document.createElement('div');
+            card.className = `notification-card ${isUnread ? 'unread' : 'read'} bg-white rounded-lg shadow p-4 border-l-4 ${style.border}`;
+            card.dataset.id = notification.notification_id;
+            card.dataset.type = notification.notification_type;
+            card.dataset.status = notification.status;
+
+            // Actor avatar
+            const actorHtml = notification.actor ? `
+                ${notification.actor.main_photo_url
+                    ? `<img src="${notification.actor.main_photo_url}" class="actor-avatar" alt="${notification.actor.username}">`
+                    : `<div class="actor-avatar-fallback">${getInitials(notification.actor.first_name, notification.actor.last_name)}</div>`
+                }
+            ` : `<div class="actor-avatar-fallback">?</div>`;
+
+            card.innerHTML = `
+                <div class="flex gap-4">
+                    <!-- Icon -->
+                    <div class="flex-shrink-0">
+                        <div class="notification-icon ${style.bg}">
+                            ${style.icon}
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-grow">
+                        <!-- Header -->
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold ${style.text}">${notification.notification_type.replace(/_/g, ' ').toUpperCase()}</span>
+                                ${style.premium ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">⭐ Premium</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-500">${getRelativeTime(notification.created_at)}</span>
+                                ${isUnread ? '<span class="w-2 h-2 bg-blue-500 rounded-full badge-pulse"></span>' : ''}
+                            </div>
+                        </div>
+
+                        <!-- Actor -->
+                        ${notification.actor ? `
+                        <div class="flex items-center gap-2 mb-2">
+                            ${actorHtml}
+                            <span class="text-sm font-medium text-gray-900">@${notification.actor.username}</span>
+                        </div>
+                        ` : ''}
+
+                        <!-- Title & Message -->
+                        <h4 class="font-semibold text-gray-900 mb-1">${notification.title}</h4>
+                        ${notification.message ? `<p class="text-sm text-gray-700 mb-3">${notification.message}</p>` : ''}
+
+                        <!-- Actions -->
+                        <div class="flex gap-2">
+                            ${isUnread ? `
+                            <button onclick="markAsRead('${notification.notification_id}')"
+                                class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition">
+                                ✓ Mark Read
+                            </button>
+                            ` : `
+                            <span class="text-xs text-gray-500">✓ Read ${notification.read_at ? 'on ' + new Date(notification.read_at).toLocaleDateString() : ''}</span>
+                            `}
+                            <button onclick="deleteNotification('${notification.notification_id}')"
+                                class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded transition">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Click to mark read (if unread)
+            if (isUnread) {
+                card.style.cursor = 'pointer';
+                card.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        markAsRead(notification.notification_id);
+                    }
+                };
+            }
+
+            return card;
+        }
+
+        // Load notifications
+        async function loadNotifications(append = false) {
+            if (!append) {
+                document.getElementById('loading_state').classList.remove('hidden');
+                document.getElementById('notifications_list').innerHTML = '';
+            }
+
+            // Get filters
+            const statusFilter = document.querySelector('input[name="status_filter"]:checked').value;
+            const typeFilters = Array.from(document.querySelectorAll('.type-filter input:checked')).map(cb => cb.value);
+
+            // Build query
+            const params = new URLSearchParams();
+            if (statusFilter !== 'all') params.append('status', statusFilter);
+            params.append('limit', currentLimit);
+            params.append('offset', append ? currentPage * currentLimit : 0);
+
+            const result = await apiCall(`/api/v1/notifications?${params.toString()}`);
+
+            document.getElementById('loading_state').classList.add('hidden');
+
+            if (!result.success) {
+                document.getElementById('error_state').classList.remove('hidden');
+
+                // Show detailed error with full response
+                const errorDetail = result.error.detail || result.error.message || 'Failed to load notifications';
+                const statusCode = result.error.status || 'Unknown';
+
+                let errorHtml = `<strong>Error ${statusCode}:</strong> ${errorDetail}`;
+
+                // Show full response for debugging
+                if (result.error.response) {
+                    errorHtml += `<br><br><strong>Full Response:</strong><br><pre class="text-xs bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-40">${JSON.stringify(result.error.response, null, 2)}</pre>`;
+                }
+
+                document.getElementById('error_message').innerHTML = errorHtml;
+                return;
+            }
+
+            document.getElementById('error_state').classList.add('hidden');
+
+            const notifications = result.data.notifications || [];
+            const pagination = result.data.pagination || {};
+
+            totalNotifications = pagination.total || 0;
+
+            // Filter by type (client-side)
+            const filteredNotifications = notifications.filter(n => typeFilters.includes(n.notification_type));
+
+            if (filteredNotifications.length === 0 && !append) {
+                document.getElementById('empty_state').classList.remove('hidden');
+                document.getElementById('load_more_container').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('empty_state').classList.add('hidden');
+
+            const list = document.getElementById('notifications_list');
+            filteredNotifications.forEach(notification => {
+                list.appendChild(renderNotificationCard(notification));
+            });
+
+            // Update pagination
+            if (pagination.has_more) {
+                document.getElementById('load_more_container').classList.remove('hidden');
+                document.getElementById('pagination_info').textContent = `Showing ${list.children.length} of ${totalNotifications} notifications`;
+            } else {
+                document.getElementById('load_more_container').classList.add('hidden');
+            }
+
+            // Update unread count
+            updateUnreadCount();
+        }
+
+        // Load more
+        function loadMore() {
+            currentPage++;
+            loadNotifications(true);
+        }
+
+        // Refresh feed
+        async function refreshFeed() {
+            const icon = document.getElementById('refresh_icon');
+            icon.style.animation = 'spin 1s linear';
+            currentPage = 0;
+            await loadNotifications(false);
+            setTimeout(() => icon.style.animation = '', 1000);
+        }
+
+        // Mark as read
+        async function markAsRead(notificationId) {
+            const result = await apiCall(`/api/v1/notifications/${notificationId}/read`, 'PATCH');
+
+            if (result.success) {
+                // Update card
+                const card = document.querySelector(`[data-id="${notificationId}"]`);
+                if (card) {
+                    card.classList.remove('unread');
+                    card.classList.add('read');
+                    card.dataset.status = 'read';
+                    // Refresh to update button
+                    refreshFeed();
+                }
+                updateUnreadCount();
+            }
+        }
+
+        // Mark all as read
+        async function markAllAsRead() {
+            if (!confirm('Mark all notifications as read?')) return;
+
+            const result = await apiCall('/api/v1/notifications/mark-read', 'POST', { mark_all: true });
+
+            if (result.success) {
+                refreshFeed();
+            }
+        }
+
+        // Delete notification
+        async function deleteNotification(notificationId) {
+            if (!confirm('Delete this notification?')) return;
+
+            const result = await apiCall(`/api/v1/notifications/${notificationId}?permanent=false`, 'DELETE');
+
+            if (result.success) {
+                const card = document.querySelector(`[data-id="${notificationId}"]`);
+                if (card) {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(100px)';
+                    setTimeout(() => card.remove(), 300);
+                }
+                updateUnreadCount();
+            }
+        }
+
+        // Update unread count
+        async function updateUnreadCount() {
+            const result = await apiCall('/api/v1/notifications/unread/count');
+
+            if (result.success) {
+                const count = result.data.total_unread || 0;
+
+                // Update all badges
+                document.getElementById('nav_unread_badge').textContent = count;
+                document.getElementById('nav_unread_badge').classList.toggle('hidden', count === 0);
+
+                document.getElementById('header_unread_count').textContent = `${count} unread`;
+                document.getElementById('header_unread_count').classList.toggle('hidden', count === 0);
+
+                document.getElementById('filter_unread_count').textContent = count;
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            currentPage = 0;
+            loadNotifications(false);
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.querySelector('input[name="status_filter"][value="all"]').checked = true;
+            document.querySelectorAll('.type-filter input').forEach(cb => cb.checked = true);
+            applyFilters();
+        }
+
+        // Toggle all types
+        function toggleAllTypes(checkbox) {
+            document.querySelectorAll('.type-filter input').forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            applyFilters();
+        }
+
+        // Quick login
+        async function quickLogin() {
+            const testEmail = 'test@example.com';
+            const testPassword = 'TestPassword123!';
+
+            try {
+                const response = await fetch(`${AUTH_API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: testEmail, password: testPassword })
+                });
+
+                const data = await response.json();
+
+                if (data.access_token) {
+                    // Store tokens (same keys as auth_test.html)
+                    localStorage.setItem(STORAGE.JWT_TOKEN, data.access_token);
+                    localStorage.setItem(STORAGE.REFRESH_TOKEN, data.refresh_token || '');
+                    localStorage.setItem(STORAGE.EMAIL, testEmail);
+
+                    const userId = extractUserIdFromToken(data.access_token);
+                    if (userId) {
+                        localStorage.setItem(STORAGE.USER_ID, userId);
+                    }
+
+                    if (data.org_id) {
+                        localStorage.setItem(STORAGE.ORG_ID, data.org_id);
+                    }
+
+                    alert('✅ Quick Login successful!');
+                    refreshFeed();
+                } else {
+                    alert('⚠️ Quick Login requires auth-api SKIP_LOGIN_CODE=true');
+                }
+            } catch (error) {
+                console.error('Quick login failed:', error);
+                alert('❌ Quick Login failed. Auth API might be down.');
+            }
+        }
+
+        // Start polling
+        function startPolling() {
+            stopPolling();
+            pollTimer = setInterval(() => {
+                updateUnreadCount();
+            }, POLL_INTERVAL);
+        }
+
+        // Stop polling
+        function stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load JWT from shared localStorage (same keys as auth_test.html)
+            const jwtToken = localStorage.getItem(STORAGE.JWT_TOKEN);
+
+            if (jwtToken) {
+                // Token found, load notifications
+                loadNotifications();
+                updateUnreadCount();
+                startPolling();
+            } else {
+                // No token, show message
+                document.getElementById('empty_state').classList.remove('hidden');
+                document.getElementById('empty_state').querySelector('p').textContent = 'Please login first on the Auth API page or use Quick Login';
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopPolling);
+    </script>
+</body>
+</html>

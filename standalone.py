@@ -27,7 +27,10 @@ app = FastAPI(
 # CORS for local development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000"],  # Auth API
+    allow_origins=[
+        "http://localhost:8000",  # Auth API
+        "http://localhost:8006",  # Notifications API
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,13 +62,15 @@ if __name__ == "__main__":
 
     print(f"""
 ╔═══════════════════════════════════════════════════════════╗
-║  🧪 Auth API Testing UI - Standalone Mode                ║
+║  🧪 Testing UI - Standalone Mode                         ║
 ╟───────────────────────────────────────────────────────────╢
-║  URL:     http://localhost:{port}/test/auth             ║
-║  Health:  http://localhost:{port}/health                ║
-║  Docs:    http://localhost:{port}/docs                  ║
+║  Auth Tests:    http://localhost:{port}/test/auth       ║
+║  Notif Tests:   http://localhost:{port}/test/notifications ║
+║  Health:        http://localhost:{port}/health          ║
+║  Docs:          http://localhost:{port}/docs            ║
 ╟───────────────────────────────────────────────────────────╢
-║  Target:  http://localhost:8000 (auth-api)              ║
+║  Auth API:      http://localhost:8000                    ║
+║  Notif API:     http://localhost:8006                    ║
 ╚═══════════════════════════════════════════════════════════╝
     """)
 
