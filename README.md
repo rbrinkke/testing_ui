@@ -20,10 +20,10 @@ Run the testing UI as a completely separate Docker container:
 ```bash
 # 1. Make sure auth-api is running (required)
 cd /mnt/d/activity && ./scripts/start-infra.sh
-cd auth-api && docker compose up -d
+cd /mnt/d/activity/auth-api && docker compose up -d
 
 # 2. Start standalone testing UI container
-cd testing_ui
+cd /mnt/d/activity/testing_ui
 ./start.sh
 ```
 
@@ -44,10 +44,10 @@ http://localhost:8099/test/auth
 docker logs -f auth-testing-ui
 
 # Stop
-cd testing_ui && docker compose down
+cd /mnt/d/activity/testing_ui && docker compose down
 
 # Rebuild after changes
-cd testing_ui && docker compose build && docker compose restart
+cd /mnt/d/activity/testing_ui && docker compose build && docker compose restart
 
 # Check status
 curl http://localhost:8099/health

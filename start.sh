@@ -25,7 +25,7 @@ else
     echo "   The testing UI will start, but won't be able to test the API."
     echo "   To start auth-api:"
     echo "   cd /mnt/d/activity && ./scripts/start-infra.sh"
-    echo "   cd auth-api && docker compose up -d"
+    echo "   cd /mnt/d/activity/auth-api && docker compose up -d"
     echo ""
 fi
 
