@@ -267,6 +267,36 @@
             document.querySelectorAll('[id$="_response"]').forEach(el => el.innerHTML = '');
         }
 
+        // Helper: Show loading state
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="p-4 rounded-lg border border-blue-300 bg-blue-50 text-blue-900 slide-in">
+                    <div class="flex items-start gap-2">
+                        <span class="text-lg">⏳</span>
+                        <div class="flex-1">
+                            <p class="font-semibold mb-1">Loading...</p>
+                            <p class="text-xs">Processing your request</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper: Disable button
+        function disableButton(buttonId) {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Helper: Enable button
+        function enableButton(buttonId) {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
         // Helper: Make API call
         async function apiCall(endpoint, method = 'POST', body = null) {
             try {
@@ -304,27 +334,35 @@
                 return;
             }
 
-            // Step 1: Send login request
-            const result = await apiCall('/api/auth/login', 'POST', { email, password });
+            // Disable button and show loading
+            disableButton('login_btn');
+            showLoading('login_response');
 
-            if (result.success) {
-                displayResponse('login_response', result.data);
+            try {
+                // Step 1: Send login request
+                const result = await apiCall('/api/auth/login', 'POST', { email, password });
 
-                // Check if code is required
-                if (result.data.requires_code) {
-                    // Show code field
-                    document.getElementById('login_code_field').classList.remove('hidden');
-                    document.getElementById('login_btn').classList.add('hidden');
-                    document.getElementById('login_verify_btn').classList.remove('hidden');
-                } else if (result.data.access_token) {
-                    // Login successful with tokens
-                    displayResponse('login_response', {
-                        ...result.data,
-                        message: '✨ Login successful!'
-                    });
+                if (result.success) {
+                    displayResponse('login_response', result.data);
+
+                    // Check if code is required
+                    if (result.data.requires_code) {
+                        // Show code field
+                        document.getElementById('login_code_field').classList.remove('hidden');
+                        document.getElementById('login_btn').classList.add('hidden');
+                        document.getElementById('login_verify_btn').classList.remove('hidden');
+                    } else if (result.data.access_token) {
+                        // Login successful with tokens
+                        displayResponse('login_response', {
+                            ...result.data,
+                            message: '✨ Login successful!'
+                        });
+                    }
+                } else {
+                    displayResponse('login_response', result.error, true);
                 }
-            } else {
-                displayResponse('login_response', result.error, true);
+            } finally {
+                enableButton('login_btn');
             }
         }
 
@@ -338,59 +376,67 @@
                 return;
             }
 
-            // Step 2: Login with code
-            const result = await apiCall('/api/auth/login', 'POST', {
-                email,
-                password,
-                code,
-                org_id: requiresOrg ? document.getElementById('login_org_id').value : undefined
-            });
+            // Disable button and show loading
+            disableButton('login_verify_btn');
+            showLoading('login_response');
 
-            if (result.success) {
-                // Check if organization selection is required
-                if (result.data.requires_org_selection && result.data.organizations) {
-                    requiresOrg = true;
-                    displayResponse('login_response', {
-                        message: 'Please select an organization',
-                        organizations: result.data.organizations
-                    });
-
-                    // Show org field
-                    document.getElementById('login_org_field').classList.remove('hidden');
-
-                    // Display organizations
-                    const orgList = result.data.organizations.map(org =>
-                        `<div class="p-2 bg-white border rounded mt-1"><strong>${org.name}</strong><br>ID: ${org.id}</div>`
-                    ).join('');
-                    document.getElementById('login_org_list').innerHTML = orgList;
-
-                    // Auto-fill first org
-                    if (result.data.organizations.length > 0) {
-                        document.getElementById('login_org_id').value = result.data.organizations[0].id;
-                    }
-                } else if (result.data.access_token) {
-                    // Login successful
-                    displayResponse('login_response', {
-                        ...result.data,
-                        message: '✨ Login successful! Tokens received.'
-                    });
-
-                    // Store tokens in localStorage
-                    localStorage.setItem('access_token', result.data.access_token);
-                    localStorage.setItem('refresh_token', result.data.refresh_token);
-
-                    // Reset form after success
-                    setTimeout(() => {
-                        document.getElementById('login_code_field').classList.add('hidden');
-                        document.getElementById('login_org_field').classList.add('hidden');
-                        document.getElementById('login_btn').classList.remove('hidden');
-                        document.getElementById('login_verify_btn').classList.add('hidden');
-                        document.getElementById('login_code').value = '';
-                        requiresOrg = false;
-                    }, 2000);
+            try {
+                // Step 2: Login with code (fix org_id undefined issue)
+                const payload = { email, password, code };
+                if (requiresOrg) {
+                    payload.org_id = document.getElementById('login_org_id').value;
                 }
-            } else {
-                displayResponse('login_response', result.error, true);
+
+                const result = await apiCall('/api/auth/login', 'POST', payload);
+
+                if (result.success) {
+                    // Check if organization selection is required
+                    if (result.data.requires_org_selection && result.data.organizations) {
+                        requiresOrg = true;
+                        displayResponse('login_response', {
+                            message: 'Please select an organization',
+                            organizations: result.data.organizations
+                        });
+
+                        // Show org field
+                        document.getElementById('login_org_field').classList.remove('hidden');
+
+                        // Display organizations
+                        const orgList = result.data.organizations.map(org =>
+                            `<div class="p-2 bg-white border rounded mt-1"><strong>${org.name}</strong><br>ID: ${org.id}</div>`
+                        ).join('');
+                        document.getElementById('login_org_list').innerHTML = orgList;
+
+                        // Auto-fill first org
+                        if (result.data.organizations.length > 0) {
+                            document.getElementById('login_org_id').value = result.data.organizations[0].id;
+                        }
+                    } else if (result.data.access_token) {
+                        // Login successful
+                        displayResponse('login_response', {
+                            ...result.data,
+                            message: '✨ Login successful! Tokens received.'
+                        });
+
+                        // Store tokens in localStorage
+                        localStorage.setItem('access_token', result.data.access_token);
+                        localStorage.setItem('refresh_token', result.data.refresh_token);
+
+                        // Reset form after success
+                        setTimeout(() => {
+                            document.getElementById('login_code_field').classList.add('hidden');
+                            document.getElementById('login_org_field').classList.add('hidden');
+                            document.getElementById('login_btn').classList.remove('hidden');
+                            document.getElementById('login_verify_btn').classList.add('hidden');
+                            document.getElementById('login_code').value = '';
+                            requiresOrg = false;
+                        }, 2000);
+                    }
+                } else {
+                    displayResponse('login_response', result.error, true);
+                }
+            } finally {
+                enableButton('login_verify_btn');
             }
         }
 
@@ -404,19 +450,27 @@
                 return;
             }
 
-            // Step 1: Register account
-            const result = await apiCall('/api/auth/register', 'POST', { email, password });
+            // Disable button and show loading
+            disableButton('register_btn');
+            showLoading('register_response');
 
-            if (result.success) {
-                currentVerificationToken = result.data.verification_token;
-                displayResponse('register_response', result.data);
+            try {
+                // Step 1: Register account
+                const result = await apiCall('/api/auth/register', 'POST', { email, password });
 
-                // Show code field
-                document.getElementById('register_code_field').classList.remove('hidden');
-                document.getElementById('register_btn').classList.add('hidden');
-                document.getElementById('register_verify_btn').classList.remove('hidden');
-            } else {
-                displayResponse('register_response', result.error, true);
+                if (result.success) {
+                    currentVerificationToken = result.data.verification_token;
+                    displayResponse('register_response', result.data);
+
+                    // Show code field
+                    document.getElementById('register_code_field').classList.remove('hidden');
+                    document.getElementById('register_btn').classList.add('hidden');
+                    document.getElementById('register_verify_btn').classList.remove('hidden');
+                } else {
+                    displayResponse('register_response', result.error, true);
+                }
+            } finally {
+                enableButton('register_btn');
             }
         }
 
@@ -433,33 +487,41 @@
                 return;
             }
 
-            // Step 2: Verify code
-            const result = await apiCall('/api/auth/verify-code', 'POST', {
-                verification_token: currentVerificationToken,
-                code: code
-            });
+            // Disable button and show loading
+            disableButton('register_verify_btn');
+            showLoading('register_response');
 
-            if (result.success) {
-                displayResponse('register_response', {
-                    ...result.data,
-                    message: '✨ Registration successful! You can now login.'
+            try {
+                // Step 2: Verify code
+                const result = await apiCall('/api/auth/verify-code', 'POST', {
+                    verification_token: currentVerificationToken,
+                    code: code
                 });
 
-                // Reset form after success
-                setTimeout(() => {
-                    document.getElementById('register_email').value = '';
-                    document.getElementById('register_password').value = '';
-                    document.getElementById('register_code').value = '';
-                    document.getElementById('register_code_field').classList.add('hidden');
-                    document.getElementById('register_btn').classList.remove('hidden');
-                    document.getElementById('register_verify_btn').classList.add('hidden');
-                    currentVerificationToken = null;
+                if (result.success) {
+                    displayResponse('register_response', {
+                        ...result.data,
+                        message: '✨ Registration successful! You can now login.'
+                    });
 
-                    // Switch to login tab
-                    switchTab('login');
-                }, 2000);
-            } else {
-                displayResponse('register_response', result.error, true);
+                    // Reset form after success
+                    setTimeout(() => {
+                        document.getElementById('register_email').value = '';
+                        document.getElementById('register_password').value = '';
+                        document.getElementById('register_code').value = '';
+                        document.getElementById('register_code_field').classList.add('hidden');
+                        document.getElementById('register_btn').classList.remove('hidden');
+                        document.getElementById('register_verify_btn').classList.add('hidden');
+                        currentVerificationToken = null;
+
+                        // Switch to login tab
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    displayResponse('register_response', result.error, true);
+                }
+            } finally {
+                enableButton('register_verify_btn');
             }
         }
 
@@ -472,19 +534,27 @@
                 return;
             }
 
-            // Step 1: Request reset
-            const result = await apiCall('/api/auth/request-password-reset', 'POST', { email });
+            // Disable button and show loading
+            disableButton('reset_btn');
+            showLoading('reset_response');
 
-            if (result.success) {
-                currentResetToken = result.data.reset_token;
-                displayResponse('reset_response', result.data);
+            try {
+                // Step 1: Request reset
+                const result = await apiCall('/api/auth/request-password-reset', 'POST', { email });
 
-                // Show code and password fields
-                document.getElementById('reset_code_fields').classList.remove('hidden');
-                document.getElementById('reset_btn').classList.add('hidden');
-                document.getElementById('reset_complete_btn').classList.remove('hidden');
-            } else {
-                displayResponse('reset_response', result.error, true);
+                if (result.success) {
+                    currentResetToken = result.data.reset_token;
+                    displayResponse('reset_response', result.data);
+
+                    // Show code and password fields
+                    document.getElementById('reset_code_fields').classList.remove('hidden');
+                    document.getElementById('reset_btn').classList.add('hidden');
+                    document.getElementById('reset_complete_btn').classList.remove('hidden');
+                } else {
+                    displayResponse('reset_response', result.error, true);
+                }
+            } finally {
+                enableButton('reset_btn');
             }
         }
 
@@ -502,34 +572,42 @@
                 return;
             }
 
-            // Step 2: Complete reset
-            const result = await apiCall('/api/auth/reset-password', 'POST', {
-                reset_token: currentResetToken,
-                code: code,
-                new_password: newPassword
-            });
+            // Disable button and show loading
+            disableButton('reset_complete_btn');
+            showLoading('reset_response');
 
-            if (result.success) {
-                displayResponse('reset_response', {
-                    ...result.data,
-                    message: '✨ Password reset successful! You can now login.'
+            try {
+                // Step 2: Complete reset
+                const result = await apiCall('/api/auth/reset-password', 'POST', {
+                    reset_token: currentResetToken,
+                    code: code,
+                    new_password: newPassword
                 });
 
-                // Reset form after success
-                setTimeout(() => {
-                    document.getElementById('reset_email').value = '';
-                    document.getElementById('reset_code').value = '';
-                    document.getElementById('reset_new_password').value = '';
-                    document.getElementById('reset_code_fields').classList.add('hidden');
-                    document.getElementById('reset_btn').classList.remove('hidden');
-                    document.getElementById('reset_complete_btn').classList.add('hidden');
-                    currentResetToken = null;
+                if (result.success) {
+                    displayResponse('reset_response', {
+                        ...result.data,
+                        message: '✨ Password reset successful! You can now login.'
+                    });
 
-                    // Switch to login tab
-                    switchTab('login');
-                }, 2000);
-            } else {
-                displayResponse('reset_response', result.error, true);
+                    // Reset form after success
+                    setTimeout(() => {
+                        document.getElementById('reset_email').value = '';
+                        document.getElementById('reset_code').value = '';
+                        document.getElementById('reset_new_password').value = '';
+                        document.getElementById('reset_code_fields').classList.add('hidden');
+                        document.getElementById('reset_btn').classList.remove('hidden');
+                        document.getElementById('reset_complete_btn').classList.add('hidden');
+                        currentResetToken = null;
+
+                        // Switch to login tab
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    displayResponse('reset_response', result.error, true);
+                }
+            } finally {
+                enableButton('reset_complete_btn');
             }
         }
     </script>
